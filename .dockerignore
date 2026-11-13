@@ -1,0 +1,11 @@
+.env
+.git
+output/
+profiler-output/
+*.zip
+.work/
+__pycache__/
+*.pyc
+.venv/
+venv/
+.github/

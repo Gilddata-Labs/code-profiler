@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gilddata-profiler"
+version = "2.0.1"
+description = "GildData Codebase Catalogue Extractor: profiles code repos into the 95 column catalogue without sharing source code"
+requires-python = ">=3.9"
+dependencies = ["openpyxl>=3.1"]
+
+[project.optional-dependencies]
+parsers = ["tree-sitter>=0.23", "tree-sitter-language-pack>=0.7"]
+yaml = ["pyyaml>=6"]
+
+[project.scripts]
+gilddata-profiler = "profiler.cli:main"
+
+[tool.setuptools]
+packages = ["profiler"]
+
+[tool.setuptools.package-data]
+profiler = ["templates/*.xlsx"]

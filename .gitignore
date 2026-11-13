@@ -1,0 +1,14 @@
+.env
+output/
+profiler-output/
+*.zip
+.work/
+.no-local/
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+.DS_Store

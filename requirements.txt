@@ -1,0 +1,7 @@
+# Core needs nothing beyond Python 3.9+ and git.
+# Optional, for parity with buyers' own tools and for compile:
+openpyxl>=3.1            # catalogue.xlsx and compile (needed for Excel outputs)
+tree-sitter>=0.23        # functions, classes, parser coverage (built in parser used if missing)
+tree-sitter-language-pack>=0.7
+pyyaml>=6                # only to read --config files written in YAML
+# Not Python, install separately (see Dockerfile): scc 3.3+, jscpd 4+ (Node 18), gitleaks 8+

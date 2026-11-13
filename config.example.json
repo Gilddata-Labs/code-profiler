@@ -1,0 +1,10 @@
+{
+  "rare_languages": ["Haskell", "Elixir", "OCaml", "COBOL", "Solidity", "Zig"],
+  "pr_bands": {"simple_max_loc": 50, "simple_max_files": 3, "rich_min_loc": 500, "rich_min_files": 15},
+  "excluded_dirs": ["node_modules", "vendor", "dist", "build"],
+  "bot_patterns": ["\\[bot\\]", "dependabot", "renovate", "github-actions", "jenkins"],
+  "author_aliases": {"rk@oldmail.com": "Ravi Kumar", "ravi k": "Ravi Kumar"},
+  "default_branch_names": ["main", "master", "develop", "trunk"],
+  "shallow_commits": 5,
+  "data_heavy_share": 0.5
+}

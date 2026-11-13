@@ -1,0 +1,18 @@
+# One command run with every tool included:
+#   cp .env.example .env   (fill in ORG and the token)
+#   docker compose run --rm profiler
+# The zip appears in OUTPUT_DIR on this machine (./output by default).
+# To profile repositories already cloned locally, set LOCAL_DIR in .env to that folder.
+
+services:
+  profiler:
+    build: .
+    image: gilddata/code-profiler:2.0.1
+    env_file:
+      - .env
+    environment:
+      # inside the container the local folder is always mounted at /repos
+      LOCAL_DIR: ${LOCAL_DIR:+/repos}
+    volumes:
+      - ${OUTPUT_DIR:-./output}:/out
+      - ${LOCAL_DIR:-./.no-local}:/repos:ro

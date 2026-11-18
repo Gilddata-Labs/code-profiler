@@ -103,9 +103,11 @@ def add_common(e: argparse.ArgumentParser) -> None:
     o.add_argument("--max-prs", type=int, default=0, help="cap merged PRs read per repo")
     o.add_argument("--pr-time-budget", type=int, default=900, help="seconds per repo for PR signals")
     o.add_argument("--no-scc", action="store_true", help="use the built in line counter")
-    o.add_argument("--clone-timeout", type=int, default=300)
+    o.add_argument("--clone-timeout", type=int, default=600,
+                   help="seconds for a clone; big repos get 2 s per MB automatically (default 600)")
     o.add_argument("--clone-retries", type=int, default=2)
-    o.add_argument("--clone-extended-timeout", type=int, default=1200)
+    o.add_argument("--clone-extended-timeout", type=int, default=3600,
+                   help="second and last try after a timed out clone (default 3600)")
     o.add_argument("-v", "--verbose", action="store_true")
     v = e.add_argument_group("report card")
     v.add_argument("--cutoff", default="2024-01-01",

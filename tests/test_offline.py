@@ -209,6 +209,34 @@ def main() -> int:
     else:
         check("scc generated-code flags are the documented ones",
               SCC_GENERATED_ARGS[:2] == ["--no-gen", "--no-min-gen"] and "--generated-code" not in SCC_GENERATED_ARGS)
+    # clone timeouts: size aware first try, a timed out clone goes straight to the extended timeout,
+    # a network error is retried with the same timeout, and the repo is named in the message
+    import subprocess as _sp
+    from profiler.gitstats import clone, clone_timeout_for
+    check("clone timeout grows with repo size", clone_timeout_for(500 * 1024, 600, 3600) == 1000
+          and clone_timeout_for(10 * 1024, 600, 3600) == 600 and clone_timeout_for(5000 * 1024, 600, 3600) == 3600)
+    seen = []
+    def fake_run(cmd, timeout=None, **kw):
+        seen.append(timeout)
+        if len(seen) == 1:
+            raise _sp.TimeoutExpired(cmd, timeout)
+    clone("https://example.invalid/acme/big.git", TMP / "clone-test", None, 600, 2, 3600,
+          name="acme/big", size_kb=100 * 1024, _run=fake_run)
+    check("timed out clone retries once with the extended timeout", seen == [600, 3600])
+    seen.clear()
+    def fake_run2(cmd, timeout=None, **kw):
+        seen.append(timeout)
+        if len(seen) <= 2:
+            raise RuntimeError("git failed (128): early EOF")
+    clone("https://example.invalid/acme/flaky.git", TMP / "clone-test2", None, 600, 2, 3600, name="acme/flaky", _run=fake_run2)
+    check("network errors retry with the same timeout", seen == [600, 600, 600])
+    try:
+        clone("https://example.invalid/acme/gone.git", TMP / "clone-test3", None, 600, 2, 3600, name="acme/gone",
+              _run=lambda cmd, timeout=None, **kw: (_ for _ in ()).throw(_sp.TimeoutExpired(cmd, timeout)))
+        named = False
+    except RuntimeError as e:
+        named = "acme/gone" in str(e)
+    check("clone failure names the repo", named)
     check("PR bands", [pr_tier(50, 3), pr_tier(51, 3), pr_tier(10, 4), pr_tier(501, 1), pr_tier(10, 16)]
           == ["simple", "standard", "standard", "rich", "rich"])
 

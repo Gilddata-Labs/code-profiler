@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.0.2
+
+Clone timeouts on large repositories, seen on a 173 repository organisation:
+
+- The clone timeout now scales with repository size (2 s per MB from the platform's size figure, at least 600 s, was a flat 300 s).
+- A clone that times out is no longer retried with the same timeout, which only burned another full timeout since git cannot resume a clone. It is retried once with `--clone-extended-timeout` (now 3600 s, was 1200 s) and then marked failed; network errors are still retried as before.
+- Clone log lines name the repository, its size and the timeout in use, so a slow repository can be found in the log.
+- Four new offline checks cover the clone retry rules (47 in total).
+- `--skip-prs` was accepted but ignored; it now skips the merged pull request fetch and the PR columns fall back to merge commit markers in the history.
+
 ## 2.0.1
 
 First public release of the profiler.

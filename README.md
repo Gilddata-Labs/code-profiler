@@ -167,6 +167,7 @@ brew install scc gitleaks                 # macOS
 | `check` shows fewer repositories than you expect | The token was created by someone who cannot see all repositories, or "All repositories" was not selected. Ask an organisation owner to create it. |
 | `Rate limited ... waiting` lines | Normal on large organisations; the profiler waits and continues. |
 | `Network error ... retrying` | Also normal on a flaky connection. If the run dies, resume it (see above). |
+| `clone of <repo> timed out after Ns` | The repository is large or the connection slow. The first try allows 600 s or 2 s per MB, whichever is larger, and a timed out clone is retried once with `--clone-extended-timeout` (3600 s). Raise that value in `EXTRA_ARGS` for very large repositories. |
 | A repository shows `EXTRACT FAILED` | Look at `logs/failures.json`; timeouts and network errors are retried once automatically. Re-run with `-v` in `EXTRA_ARGS` for a traceback. |
 | Memory pressure on a small machine | Lower `WORKERS` to 2. |
 | Windows: `py` not found | Install Python from python.org with "Add to PATH" ticked, or use Docker. |
@@ -180,9 +181,9 @@ If something still does not work, send `logs/extract.log` and `logs/failures.jso
 ## Tests
 
 ```bash
-python tests/test_offline.py     # 43 checks on fixture repositories, no network
+python tests/test_offline.py     # 47 checks on fixture repositories, no network
 ```
 
 ## Version
 
-2.0.1. See `CHANGELOG.md`.
+2.0.2. See `CHANGELOG.md`.

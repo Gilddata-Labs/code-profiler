@@ -232,12 +232,15 @@ class Extractor:
             meta = client.repo(t.full_name)
             check = {"platform": t.platform, "host": client.host, "started_at": now_iso(),
                      "before": {"counts": client.counts(t.full_name, meta), "refs": client.refs(t.full_name)}}
-            prs = client.merged_prs(t.full_name, limit=a.max_prs or None,
-                                    **({"checkpoint": str(self.work / "prs" / f"{t.key}.jsonl")}
-                                       if t.platform == "github" else {}))
+            if a.skip_prs:   # --skip-prs: PR columns fall back to merge commit markers in the history
+                prs = None
+            else:
+                prs = client.merged_prs(t.full_name, limit=a.max_prs or None,
+                                        **({"checkpoint": str(self.work / "prs" / f"{t.key}.jsonl")}
+                                           if t.platform == "github" else {}))
             total_prs = client.total_prs(t.full_name)
             save("api_repo.json", _slim_meta(meta, t.platform))
-            save("api_merged_prs.json", [_slim_pr(p, a.include_text) for p in prs])
+            save("api_merged_prs.json", [_slim_pr(p, a.include_text) for p in (prs or [])])
         import time as _t
         tick = {"t": _t.time()}
         timings: dict[str, float] = {}

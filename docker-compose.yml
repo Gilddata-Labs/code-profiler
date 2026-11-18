@@ -7,7 +7,7 @@
 services:
   profiler:
     build: .
-    image: gilddata/code-profiler:2.0.1
+    image: gilddata/code-profiler:2.0.2
     env_file:
       - .env
     environment:

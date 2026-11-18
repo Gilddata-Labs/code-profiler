@@ -11,17 +11,40 @@ from .util import AI_SIGNATURE_RE, is_bot, log, parse_date, run
 REC, FLD = "\x1e", "\x1f"
 
 
+def clone_timeout_for(size_kb, timeout: int, extended_timeout: int) -> int:
+    """First attempt timeout: the configured one, or 2 s per MB for big repos (capped at the
+    extended timeout). A 500 MB repo gets about 1000 s instead of failing at 300 s."""
+    try:
+        mb = int(size_kb or 0) / 1024
+    except (TypeError, ValueError):
+        mb = 0
+    t = max(int(timeout), int(mb * 2))
+    return min(t, extended_timeout) if extended_timeout else t
+
+
 def clone(url: str, dest: Path, auth_header: str | None, timeout: int,
-          retries: int, extended_timeout: int) -> None:
-    """Full clone (history is needed). Token goes in a header, never in the URL."""
+          retries: int, extended_timeout: int, name: str = "", size_kb=None, _run=None) -> None:
+    """Full clone (history is needed). Token goes in a header, never in the URL.
+
+    A clone that times out is not repeated with the same timeout (git cannot resume a clone,
+    so that only burns another full timeout): the next attempt goes straight to the extended
+    timeout, then gives up. Network and other errors are retried up to `retries` times."""
+    import subprocess
+    import time as _time
+    runner = _run or run
     if dest.exists():
         shutil.rmtree(dest, ignore_errors=True)
     cfg = ["-c", f"http.extraHeader={auth_header}"] if auth_header else []
-    attempts = [timeout] * (retries + 1) + ([extended_timeout] if extended_timeout else [])
-    last = None
-    for i, t in enumerate(attempts):
+    label = name or url
+    t = clone_timeout_for(size_kb, timeout, extended_timeout)
+    size_txt = f"{int(size_kb) / 1024:.0f} MB" if str(size_kb or "").isdigit() else "size unknown"
+    log.info("cloning %s (%s, timeout %ds)", label, size_txt, t)
+    attempt, errors_left, last = 0, retries, None
+    while True:
+        attempt += 1
+        started = _time.time()
         try:
-            run(["git", *cfg, "clone", "--quiet", url, str(dest)], timeout=t)
+            runner(["git", *cfg, "clone", "--quiet", url, str(dest)], timeout=t)
             return
         except Exception as e:  # noqa: BLE001
             last = e
@@ -29,8 +52,21 @@ def clone(url: str, dest: Path, auth_header: str | None, timeout: int,
             msg = str(e).lower()
             if "not found" in msg or "authentication" in msg or "403" in msg:
                 break
-            log.warning("clone attempt %d failed (%s), retrying", i + 1, type(e).__name__)
-    raise RuntimeError(f"clone failed: {last}")
+            if isinstance(e, subprocess.TimeoutExpired):
+                if extended_timeout and t < extended_timeout:
+                    log.warning("clone of %s timed out after %ds (attempt %d); retrying once with %ds",
+                                label, t, attempt, extended_timeout)
+                    t = extended_timeout
+                    continue
+                log.warning("clone of %s timed out after %ds (attempt %d); giving up, raise "
+                            "--clone-extended-timeout for this repo", label, t, attempt)
+                break
+            if errors_left <= 0:
+                break
+            errors_left -= 1
+            log.warning("clone of %s failed after %.0fs (%s, attempt %d); retrying",
+                        label, _time.time() - started, type(e).__name__, attempt)
+    raise RuntimeError(f"clone failed for {label}: {last}")
 
 
 def measured_branch(repo: Path, default_branch: str | None) -> tuple[str, str]:

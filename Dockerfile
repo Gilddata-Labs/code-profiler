@@ -1,6 +1,6 @@
 # Profiler image with every optional tool included (scc, jscpd, gitleaks, tree-sitter).
 #   docker compose run --rm profiler            settings from .env, zip in ./output
-#   docker run --rm -v "$PWD/output:/out" --env-file .env gilddata/code-profiler:2.0.1
+#   docker run --rm -v "$PWD/output:/out" --env-file .env gilddata/code-profiler:2.0.2
 # Versions are pinned on purpose so numbers are reproducible. Builds on linux/amd64 and linux/arm64.
 FROM python:3.11-slim
 
